@@ -1,5 +1,7 @@
 import customtkinter
 from PIL import Image
+import sqlalchemy
+from sqlalchemy import create_engine, text
 
 customtkinter.set_appearance_mode("System")
 customtkinter.set_default_color_theme("blue")
@@ -31,6 +33,31 @@ morse_entry = customtkinter.CTkEntry(master=screen, width=250)
 morse_entry.grid(column=2, row=3, padx=15)
 
 
+# Create SQLAlchemy engine
+engine = create_engine("sqlite+pysqlite:///:memory:", echo=True)
+
+# Create a temporary db for this instance, needs to be a specific db
+with engine.connect() as conn:
+    conn.execute(text("CREATE TABLE morse_db (Original_Input, Morse_Code)"))
+    conn.commit()
+
+def log_input(string, morse):
+    #store the original input and morse code into the temporary db
+    with engine.connect() as conn:
+        conn.execute(text("INSERT INTO morse_db (Original_Input, Morse_Code) VALUES (:Original_Input, :Morse_Code)"),
+                    [{"Original_Input": string, "Morse_Code": morse}]
+        )
+        conn.commit()
+    results()
+
+
+def results():
+    # shows if the original input and morse code were logged in properly
+    with engine.connect() as conn:
+        result = conn.execute(text("SELECT Original_Input, Morse_Code FROM morse_db"))
+        for row in result:
+            print(f"x: {row.Original_Input}  y: {row.Morse_Code}")
+
 
 def to_morse(string):
   
@@ -44,6 +71,7 @@ def to_morse(string):
         elif char == " ":
             morse_string += " " #Retains spacing 
     morse_entry.insert(0, morse_string)
+    log_input(string, morse_string)
 
 
 def to_human(morse_string):
@@ -90,6 +118,6 @@ MORSE_CODE_DICT = { 'A':'.-', 'B':'-...',
 
 screen.mainloop()
 
-# This code above was uploaded on 19.03.23. 
-# In the following days I'll update it to also store all strings and morse code into a SQL DB 
-# and whatever else I can think of implementing for the sake of practicing what I've learned
+# Added a temporary DB that stores the input and morse code generated in this instance of the code, need to
+# connect to a permanent db that stores the information, not one that creates a new db table on each 
+# instance of the code. I would also work on separating the functionality into different files
