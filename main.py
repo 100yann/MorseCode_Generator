@@ -1,6 +1,7 @@
 import customtkinter
 from PIL import Image
 from sql import DB
+from top100_words import get_words
 import random
 
 
@@ -52,55 +53,70 @@ morse_entry = customtkinter.CTkEntry(master=screen, width=250)
 morse_entry.grid(column=2, row=3, padx=15)
 
 
-with open ("word_bank.txt", "r") as word_bank:
-    all_words = word_bank.readlines()
-    random_word = random.choice(all_words)
-    print(random_word)
-
-
-
 # Load DB
 db = DB()
 
 def to_morse(string):
-    # Converts the string input into morse code
-    morse_entry.delete(0, len(morse_entry.get()))
-    dict_input = [char.title() for char in string]
-    morse_string = ""
-    for char in dict_input:
-        if char in MORSE_CODE_DICT.keys():
-            morse_string += f"{MORSE_CODE_DICT[char]} "
-        elif char == " ":
-            morse_string += " " # Retains spacing 
-    morse_entry.insert(0, morse_string)
-    # log the input/output to the db
-    db.log_input(string, morse_string)
+    if len(string_entry.get()) > 0:
+        # Converts the string input into morse code
+        morse_entry.delete(0, len(morse_entry.get()))
+        dict_input = [char.title() for char in string]
+        morse_string = ""
+        for char in dict_input:
+            if char in MORSE_CODE_DICT.keys():
+                morse_string += f"{MORSE_CODE_DICT[char]} "
+            elif char == " ":
+                morse_string += " " # Retains spacing 
+        morse_entry.insert(0, morse_string)
+        # log the input/output to the db
+        db.log_input(string, morse_string)
 
 
 def to_human(morse_string):
     # Convert morse code back to readable text, 
     # since morse code doesn't retain capitalization the string is returned as if the program is yelling at you (all caps)
+    if len(morse_entry.get()) > 0:
+        string_entry.delete(0, len(string_entry.get()))
+        morse_list = morse_string.split(" ")
+        og_string = ""
+        for char in morse_list:
+            for key, value in MORSE_CODE_DICT.items():
+                if char == value:
+                    og_string += f"{key}"
+            if char == "":
+                og_string += " "
+        string_entry.insert(0, og_string)
+        db.log_input(og_string, morse_string)
+
+
+def random_word():
     string_entry.delete(0, len(string_entry.get()))
-    morse_list = morse_string.split(" ")
-    og_string = ""
-    for char in morse_list:
-        for key, value in MORSE_CODE_DICT.items():
-            if char == value:
-                og_string += f"{key}"
-        if char == "":
-            og_string += " "
-    string_entry.insert(0, og_string)
+    morse_entry.delete(0, len(morse_entry.get()))
+    rand_word, rand_morse = random.choice(list(get_words().items()))
+    string_entry.insert(0, rand_word)
+    morse_entry.insert(0, rand_morse)
 
 
 frame = customtkinter.CTkFrame(master=screen, width=250,height=50, corner_radius=45, fg_color="transparent")
 frame.grid(column=1, columnspan=2, row=4, pady=10)
 
-button = customtkinter.CTkButton(master=frame, text="To Morse", command= lambda: to_morse(string_entry.get()))
-button.grid(column=1, row=4, padx=10)
-button_2 = customtkinter.CTkButton(master=frame, text="To Human", command= lambda: to_human(morse_entry.get()))
-button_2.grid(column=2, row=4)
+input_text = customtkinter.CTkButton(master=frame, 
+                                 text="To Morse",
+                                 width=110,
+                                 command= lambda: to_morse(string_entry.get()))
+input_text.grid(column=1, row=4, padx=10)
 
+input_morse = customtkinter.CTkButton(master=frame, 
+                                   text="To Human",
+                                   width=110,
+                                   command= lambda: to_human(morse_entry.get()))
+input_morse.grid(column=2, row=4)
+
+get_random_word = customtkinter.CTkButton(master=frame, 
+                                   text="Random", 
+                                   width=30,
+                                   command=random_word)
+get_random_word.grid(column=3, row=4, padx=10)
 
 screen.mainloop()
-
-
+# db.delete_data()
