@@ -1,7 +1,7 @@
 # MorseCode_Generator
 Converts user input to morse code and vise versa. Do you need it? Probably not. Does it exist? Yes.
 
-![morse code](https://user-images.githubusercontent.com/111984273/227352444-6335d2b6-c9c7-40f6-9998-7ebe549d8e68.jpg)
+![morse code](https://user-images.githubusercontent.com/111984273/227352988-62895659-1171-4548-b5ca-7771fa0ed999.jpg)
 
 
 Used a custom Tkinter library to make a modern UI instead of the classic Tkinter Windows 95 style.
